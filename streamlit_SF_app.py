@@ -6,7 +6,7 @@ session = Session.builder.configs(conn).create()
 my_cur = my_cnx.cursor()
 def db_list():
   dbs=session.sql("SHOW DATABASES ;").collect()
-  db_list = [list(row.asDict().value()[1] for row in dbs]
+  db_list = [list(row.asDict().value())[1] for row in dbs]
    return db_list
 my_data_row = conn.fetchone()
 st.text("Hello from Snowflake:")
