@@ -1,9 +1,14 @@
 import streamlit as st
 import snowflake.connector
-my_cnx = snowflake.connector.connect(**st.secrets["snowflake"])
+from snowflake.snowpark import Session 
+conn = snowflake.connector.connect(**st.secrets["snowflake"])
+session = Session.builder.configs(conn).create()
 my_cur = my_cnx.cursor()
-my_cur.execute("SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_REGION()")
-my_data_row = my_cur.fetchone()
+def db_list():
+  dbs=session.sql("SHOW DATABASES ;").collect
+  db_list = [list(row.asDict().value()[1] for row in dbs]
+   return db_list
+my_data_row = conn.fetchone()
 st.text("Hello from Snowflake:")
 st.text(my_data_row)
 st.title("Application to connect Snowflake with Stramlit")
