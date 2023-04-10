@@ -1,15 +1,41 @@
-import streamlit as st
-import snowflake.snowpark
-import snowflake.connector
-from snowflake.snowpark import Session 
+import os
+import configparser
+from snowflake.snowpark import Session
 from snowflake.snowpark.functions import *
-conn = snowflake.connector.connect(**st.secrets["snowflake"])
+import pandas as pd
+import streamlit as st
+
+
+st.set_page_config(
+    layout="wide",
+    page_title="Data Entry Interface"
+)
+
+
+config = configparser.ConfigParser()
+ini_path = os.path.join(os.getcwd(),'config.ini')
+config.read(ini_path)
+
+sfAccount = config['SnowflakePOC']['sfAccount']
+sfUser = config['SnowflakePOC']['sfUser']
+sfPass = config['SnowflakePOC']['sfPass']
+sfRole = config['SnowflakePOC']['sfRole']
+#sfDB = config['SnowflakePOC']['sfDB']
+#sfSchema = config['SnowflakePOC']['sfSchema']
+sfWarehouse = config['SnowflakePOC']['sfWarehouse']
+
+conn = {                            "account": sfAccount,
+                                    "user": sfUser,
+                                    "password": sfPass,
+                                    "role": sfRole,
+                                    "warehouse": sfWarehouse}
+                                    #"database": sfDB,
+                                    #"schema": sfSchema}
+
 session = Session.builder.configs(conn).create()
+
 def db_list():
-  dbs=session.sql("SHOW DATABASES ;").collect()
-  db_list = [list(row.asDict().value())[1] for row in dbs]
-  return db_list
-my_data_row = conn.fetchone()
-st.text("Hello from Snowflake:")
-st.text(my_data_row)
-st.title("Application to connect Snowflake with Stramlit")
+    dbs = session.sql("show databases ;").collect()
+    #db_list = dbs.filter(col('name') != 'SNOWFLAKE')
+    db_list = [list(row.asDict().values())[1] for row in dbs]
+    return db_list    
