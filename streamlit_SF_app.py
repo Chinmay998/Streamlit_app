@@ -1,6 +1,7 @@
 import streamlit as st
 import snowflake.connector
 from snowflake.snowpark import Session 
+from snowflake.snowpark.functions import *
 conn = snowflake.connector.connect(**st.secrets["snowflake"])
 session = Session.builder.configs(conn).create()
 my_cur = my_cnx.cursor()
