@@ -132,7 +132,7 @@ def upload_file(chosen_db, chosen_schema, chosen_table, chosen_file):
 
 # # ------------------------------------------- SECTION 4 --------------------------------------------------
 
-# # Step 8 Add title
+
 st.title('Manual CSV to Snowflake Table Uploader')
 
 # # Step 9 Add sidebar with instructions
