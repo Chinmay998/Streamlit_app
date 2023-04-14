@@ -1,164 +1,106 @@
-import os
-import configparser
-from snowflake.snowpark import Session
-from snowflake.snowpark.functions import *
-import pandas as pd
+from snowflake.snowpark.session import Session
+from snowflake.snowpark.functions import avg, sum, col,lit
 import streamlit as st
+import pandas as pd
+import configparser
+import os
 
-
+# # Page config must be set
 st.set_page_config(
     layout="wide",
-    page_title="Data Entry Interface"
+    page_title="Weather Report"
 )
 
+# Step 2 Create connection parameters
+#Configure config.ini file path
 
 config = configparser.ConfigParser()
 ini_path = os.path.join(os.getcwd(),'config.ini')
 config.read(ini_path)
 
+# Setup config.ini read rules
+
 sfAccount = config['SnowflakePOC']['sfAccount']
 sfUser = config['SnowflakePOC']['sfUser']
 sfPass = config['SnowflakePOC']['sfPass']
 sfRole = config['SnowflakePOC']['sfRole']
-#sfDB = config['SnowflakePOC']['sfDB']
-#sfSchema = config['SnowflakePOC']['sfSchema']
+sfDB = config['SnowflakePOC']['sfDB']
+sfSchema = config['SnowflakePOC']['sfSchema']
 sfWarehouse = config['SnowflakePOC']['sfWarehouse']
+def create_session_object():
+        connection_parameters = {           "account":sfAccount,
+                                        "user": sfUser,
+                                        "password":sfPass,
+                                        "role":sfRole,
+                                        "warehouse":sfWarehouse,
+                                        "database":sfDB ,
+                                        "schema":sfSchema
+                                }
 
-conn = {                            "account": sfAccount,
-                                    "user": sfUser,
-                                    "password": sfPass,
-                                    "role": sfRole,
-                                    "warehouse": sfWarehouse}
-                                    #"database": sfDB,
-                                    #"schema": sfSchema}
+        # # Step 3 Create a session using the connection parameters
+        session = Session.builder.configs(connection_parameters).create()
+        print(session.sql('select current_warehouse(), current_database(), current_schema()').collect())
+        return session
 
-session = Session.builder.configs(conn).create()
 
-def db_list():
-    dbs = session.sql("show databases ;").collect()
-    #db_list = dbs.filter(col('name') != 'SNOWFLAKE')
-    db_list = [list(row.asDict().values())[1] for row in dbs]
-    return db_list    
-# # Step 4 Create a function that will return a list of schemas
-def schemas_list(chosen_db = str):
-    #.table() tells us which table we want to select
-    # col() refers to a column
-    # .select() allows us to chose which column(s) we want
-    # .filter() allows us to filter on coniditions
-    # .distinct() means removing duplicates
     
-    session.sql('use database :chosen_db;')
-    fq_schema_name = chosen_db+'.information_schema.tables'
-    
-
-    schemas = session.table(fq_schema_name)\
-            .select(col("table_schema"),col("table_catalog"),col("table_type"))\
-            .filter(col('table_schema') != 'INFORMATION_SCHEMA')\
-            .filter(col('table_type') == 'BASE TABLE')\
-            .distinct()
-            
-    schemas_list = schemas.collect()
-    # The above function returns a list of row objects
-    # The below turns iterates over the list of rows
-    # and converts each row into a dict, then a list, and extracts
-    # the first value
-    schemas_list = [list(row.asDict().values())[0] for row in schemas_list]
-    return schemas_list
-
-# # [DEMO ONLY]
-# st.write(schemas_list())
-# # [DEMO END]
-
-# # Step 5 Create a function that will return a list of tables within the chose schema
-def tables_list(chosen_db = str, chosen_schema = str):
-
-    fq_schema_name = chosen_db+'.information_schema.tables'
-    #tables = session.table('sf_demo.information_schema.tables')\
-    tables = session.table(fq_schema_name)\
-        .select(col('table_name'), col('table_schema'), col('table_type') )\
-        .filter(col('table_schema') == chosen_schema)\
-        .filter(col('table_type') == 'BASE TABLE')\
-        .sort('table_name')
-    tables_list = tables.collect()
-    tables_list = [list(row.asDict().values())[0] for row in tables_list]
-    return tables_list
-
-# # [DEMO ONLY]
-# st.write(tables_list('WORLD_BANK_METADATA'))
-# # [DEMO END]
-
-# # ------------------------------------------- SECTION 3 --------------------------------------------------
-
-# # Step 6 Create a function that will return text specifying schema and table
-def file_to_upload(chosen_db, chosen_schema, chosen_table):
-    label_for_file_upload = "Select file to ingest into {d}.{s}.{t}"\
-      .format(d = chosen_db, s = chosen_schema, t = chosen_table)
-    return label_for_file_upload
+# df_history = session.table("HISTORY_DAY")\
+#             .select(col("COUNTRY"),col("DATE_VALID_STD"),col("POSTAL_CODE"),col("MAX_TEMPERATURE_AIR_2M_F"))\
+#             .filter(col('POSTAL_CODE') == '32333')\
+#             .distinct()\
+#   
+#           .collect()
+def load_data(session):
+        df_history = session.table("CLIMATE.HISTORY_DAY").filter(col('COUNTRY') == 'US')
+        df_history = df_history.group_by('POSTAL_CODE').max('MAX_TEMPERATURE_FEELSLIKE_2M_F').filter(col('POSTAL_CODE') != '445001').sort('POSTAL_CODE').collect()
+        # df1_history=df_history.collect()
+        df_history= [list(row.asDict().values()) for row in df_history]
+        pd_df_history = df_history.to_pandas()
+        #st.write(df_history)
 
 
-# # Step 7 Create a function to upload the CSV
-def upload_file(chosen_db, chosen_schema, chosen_table, chosen_file):
-    if chosen_file is not None:
-        # Upload file as csv using Pandas
-        df_to_ingest = pd.read_csv(chosen_file)
-        # Work out how many rows are in Pandas DF
-        num_of_rows = len(df_to_ingest)
+
+        # df_forecast= session.table("FORCAST_DAY")\
+        #                 .select(col("COUNTRY"),col("DATE_VALID_STD"),col("POSTAL_CODE"),col("MAX_TEMPERATURE_AIR_2M_F"))\
+        #                 .filter(col('POSTAL_CODE') == '32333')\
+        #                 .distinct()\
+        #                 .collect()
+        df_forecast = session.table("CLIMATE.HISTORY_DAY").filter(col('COUNTRY') == 'US')
+        df_forecast = df_forecast.group_by('POSTAL_CODE').max('MAX_TEMPERATURE_FEELSLIKE_2M_F').filter(col('POSTAL_CODE') != '445001').sort('POSTAL_CODE').collect()
+        #df1_forecast= df_forecast.collect()
+        df_forecast= [list(row.asDict().values()) for row in df_forecast]
+
+
+        #st.write(df_forecast)
+        st.header("Weather Sourc:Global Weather & Climate Data for BI")
+        st.subheader("Powered by Snowpark for Python and Snowflake Data Marketplace | Made with Streamlit")
+
+
+        pd_df_forecast = df_forecast.to_pandas()
         
-        try:
-            # Attempt an upload
-            # Must use collect so that the statement actually executes
-            session.sql('use schema ' +chosen_db+'.'+chosen_schema).collect()
-            session.write_pandas(
-                df=df_to_ingest,
-                table_name=chosen_table,
-                database=chosen_db,
-                schema=chosen_schema,
-                overwrite=False,
-                quote_identifiers=False
-            )
-            # If succesful return the following message
-            message = """
-            Your upload was a success. You uploaded {r} rows.
-            """.format(r = num_of_rows)
-        except Exception as e:
-            # Otherwise return this message
-            message = """
-            Your upload was not succesful. \n
-            """ + str(e)
-        return message
 
-    else:
-        return "Awaiting file to upload..."
+        col1, col2 = st.columns(2)
+        with st.container():
+                with col1:
+                        st.subheader(' Weather History- USA')
+                        st.dataframe(pd_df_history)
+                with col2:
+                        st.subheader('Weather Forecast- USA')
+                        st.dataframe(pd_df_forecast)
+        
+                
+      
+        with st.container():
+                st.subheader('TEMPERATURE')
+                with st.expander(""):
+                 temp_threshold = st.number_input(label='Temperature Threshold',min_value=70, value=110, step=1)
+        pd_df_history_top_n = df_forecast.filter(col('MAX(MAX_TEMPERATURE_FEELSLIKE_2M_F)') > temp_threshold).to_pandas()
+        st.bar_chart(data=pd_df_history_top_n.set_index('POSTAL_CODE'), width=850, height=500, use_container_width=True)
 
-# # ------------------------------------------- SECTION 4 --------------------------------------------------
+                
+                # with col4:
 
-
-st.title('Manual CSV to Snowflake Table Uploader')
-
-# # Step 9 Add sidebar with instructions
-with st.sidebar:
-    
-    st.header("Instructions:")
-    st.markdown("""
-    - Select the schema from the available.\n
-    - Then select the table which will automatically update to reflect your schema choice.\n
-    - Check that the table corresponds to that which you want to ingest into.\n
-    - Select the file you want to ingest.\n
-    - You should see an upload success message detailing how many rows were ingested.\n
-    """)
-
-dbs_list = db_list()
-chosen_db = st.radio(label='Select database:', options = db_list(), index=0)
-
-# # Step 10 Create a radio input with the schemas_list() function
-chosen_schema = st.radio(label='Select schema:', options=schemas_list(chosen_db), index=0)
-
-# # Step 11 Create a radio input with the tables_list() function
-chosen_table = st.radio(label='Select table to upload to:',\
- options=tables_list(chosen_db,chosen_schema))
-
-
-chosen_file = st.file_uploader(label=file_to_upload(chosen_db,chosen_schema, chosen_table))
-
-
-print_message = st.write(upload_file(chosen_db, chosen_schema, chosen_table, chosen_file))
+                #     st.subheader('Chart Weather forecast')
+if __name__ == "__main__":
+    session = create_session_object()
+    load_data(session)
