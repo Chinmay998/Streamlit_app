@@ -43,40 +43,29 @@ def create_session_object():
         return session
 
 
-    
-# df_history = session.table("HISTORY_DAY")\
-#             .select(col("COUNTRY"),col("DATE_VALID_STD"),col("POSTAL_CODE"),col("MAX_TEMPERATURE_AIR_2M_F"))\
-#             .filter(col('POSTAL_CODE') == '32333')\
-#             .distinct()\
-#   
-#           .collect()
+
 def load_data(session):
         df_history = session.table("CLIMATE.HISTORY_DAY").filter(col('COUNTRY') == 'US')
-        df_history = df_history.group_by('POSTAL_CODE').max('MAX_TEMPERATURE_FEELSLIKE_2M_F').filter(col('POSTAL_CODE') != '445001').sort('POSTAL_CODE').collect()
-        # df1_history=df_history.collect()
+        df_history = df_history.group_by('POSTAL_CODE').max('MAX_TEMPERATURE_FEELSLIKE_2M_F').filter(col('POSTAL_CODE') != '445001').sort('MAX(MAX_TEMPERATURE_FEELSLIKE_2M_F)',ascending=False).limit(10).collect()
         df_history= [list(row.asDict().values()) for row in df_history]
-        pd_df_history = df_history.to_pandas()
-        #st.write(df_history)
+        
+        pd_df_history =pd.DataFrame(df_history,columns=['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F'])
+
+        
 
 
 
-        # df_forecast= session.table("FORCAST_DAY")\
-        #                 .select(col("COUNTRY"),col("DATE_VALID_STD"),col("POSTAL_CODE"),col("MAX_TEMPERATURE_AIR_2M_F"))\
-        #                 .filter(col('POSTAL_CODE') == '32333')\
-        #                 .distinct()\
-        #                 .collect()
+       
         df_forecast = session.table("CLIMATE.HISTORY_DAY").filter(col('COUNTRY') == 'US')
-        df_forecast = df_forecast.group_by('POSTAL_CODE').max('MAX_TEMPERATURE_FEELSLIKE_2M_F').filter(col('POSTAL_CODE') != '445001').sort('POSTAL_CODE').collect()
-        #df1_forecast= df_forecast.collect()
+        df_forecast = df_forecast.group_by('POSTAL_CODE').max('MAX_TEMPERATURE_FEELSLIKE_2M_F').filter(col('POSTAL_CODE') != '445001').sort('MAX(MAX_TEMPERATURE_FEELSLIKE_2M_F)',ascending=False).limit(10).collect()
         df_forecast= [list(row.asDict().values()) for row in df_forecast]
+        pd_df_forecast =pd.DataFrame(df_forecast,columns=['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F'])
 
 
-        #st.write(df_forecast)
+       
         st.header("Weather Sourc:Global Weather & Climate Data for BI")
         st.subheader("Powered by Snowpark for Python and Snowflake Data Marketplace | Made with Streamlit")
 
-
-        pd_df_forecast = df_forecast.to_pandas()
         
 
         col1, col2 = st.columns(2)
@@ -89,18 +78,21 @@ def load_data(session):
                         st.dataframe(pd_df_forecast)
         
                 
-      
+       
         with st.container():
                 st.subheader('TEMPERATURE')
                 with st.expander(""):
-                 temp_threshold = st.number_input(label='Temperature Threshold',min_value=70, value=110, step=1)
-        pd_df_history_top_n = df_forecast.filter(col('MAX(MAX_TEMPERATURE_FEELSLIKE_2M_F)') > temp_threshold).to_pandas()
-        st.bar_chart(data=pd_df_history_top_n.set_index('POSTAL_CODE'), width=850, height=500, use_container_width=True)
-
                 
-                # with col4:
+                 temp_threshold = st.number_input(label='Temperature Threshold',min_value=70, value=126, step=1)
+      
+        st.subheader('Weather History Barchart')
+        pd_df_history_top_n = pd_df_history[pd_df_history['MAX_TEMPERATURE_FEELSLIKE_2M_F']< temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
+        st.bar_chart(data=pd_df_history_top_n, width=850, height=500, use_container_width=True,x='POSTAL_CODE',y='MAX_TEMPERATURE_FEELSLIKE_2M_F')
+        
+        st.subheader('Weather Forecast Barchart')
+        pd_df_forecast_top_n = pd_df_forecast[pd_df_forecast['MAX_TEMPERATURE_FEELSLIKE_2M_F']< temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
+        st.bar_chart(data=pd_df_forecast_top_n, width=850, height=500, use_container_width=True,x='POSTAL_CODE',y='MAX_TEMPERATURE_FEELSLIKE_2M_F')
 
-                #     st.subheader('Chart Weather forecast')
 if __name__ == "__main__":
     session = create_session_object()
     load_data(session)
