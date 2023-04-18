@@ -2,3 +2,4 @@
 snowflake-connector-python
 snowflake-snowpark-python
 streamlit==0.75.0
+/home/appuser/venv/bin/python -m pip install --upgrade pip
