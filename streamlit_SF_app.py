@@ -72,7 +72,7 @@ with st.container():
                  st.subheader('TEMPERATURE')
                 with st.expander(""):
                  #Set Threshold As the values in Table to view the graph
-                 temp_threshold = st.number_input(label='Temperature Threshold',min_value=70, value=126, step=1)
+                 temp_threshold = st.number_input(label='Temperature Threshold',min_value=70, value=45, step=1)
 
 st.subheader('Weather History Barchart')
 pd_df_history_top_n = df_history[df_history['MAX_TEMPERATURE_FEELSLIKE_2M_F']> temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
