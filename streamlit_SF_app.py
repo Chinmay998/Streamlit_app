@@ -52,8 +52,8 @@ df_forecast =pd.read_sql ("SELECT  POSTAL_CODE,MAX(MAX_TEMPERATURE_FEELSLIKE_2M_
 st.write(df_forecast)
 
 
- st.header("Weather Sourc:Global Weather & Climate Data for BI")
- st.subheader("Powered by Snowpark for Python and Snowflake Data Marketplace | Made with Streamlit")
+st.header("Weather Sourc:Global Weather & Climate Data for BI")
+st.subheader("Powered by Snowpark for Python and Snowflake Data Marketplace | Made with Streamlit")
 
         
 
