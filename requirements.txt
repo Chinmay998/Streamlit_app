@@ -1,5 +1,2 @@
 #requirements.txt
-snowflake-connector-python
-snowflake-snowpark-python
-streamlit==0.75.0
-pip install == 23.1
+-r https://raw.githubusercontent.com/snowflakedb/snowflake-connector-python/v2.7.9/tested_requirements/requirements_39.reqs
