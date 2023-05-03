@@ -75,9 +75,9 @@ with st.container():
                  temp_threshold = st.number_input(label='Temperature Threshold',min_value=70, value=126, step=1)
 
 st.subheader('Weather History Barchart')
-pd_df_history_top_n = df_history[df_history['MAX_TEMPERATURE_FEELSLIKE_2M_F']< temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
+pd_df_history_top_n = df_history[df_history['MAX_TEMPERATURE_FEELSLIKE_2M_F']> temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
 st.bar_chart(data=pd_df_history_top_n, width=850, height=500, use_container_width=True,x='POSTAL_CODE',y='MAX_TEMPERATURE_FEELSLIKE_2M_F')
         
 st.subheader('Weather Forecast Barchart')
-pd_df_forecast_top_n = df_forecast[df_forecast['MAX_TEMPERATURE_FEELSLIKE_2M_F']< temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
+pd_df_forecast_top_n = df_forecast[df_forecast['MAX_TEMPERATURE_FEELSLIKE_2M_F']> temp_threshold][['POSTAL_CODE','MAX_TEMPERATURE_FEELSLIKE_2M_F']].astype({'MAX_TEMPERATURE_FEELSLIKE_2M_F': float}).reset_index(drop=True)
 st.bar_chart(data=pd_df_forecast_top_n, width=850, height=500, use_container_width=True,x='POSTAL_CODE',y='MAX_TEMPERATURE_FEELSLIKE_2M_F')
