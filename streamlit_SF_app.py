@@ -27,8 +27,8 @@ config.read('config.ini')
 # sfWarehouse = config['SnowflakePOC']['sfWarehouse']
 
 #Print SF user name to test login credential variables are setup properly
-print(sfUser)
-print(sfAccount)
+# print(sfUser)
+# print(sfAccount)
 conn = snowflake.connector.connect(**streamlit.secrets["snowflake"])
 #Set up connection with Snowflake
 # conn = snowflake.connector.connect(user = sfUser,
