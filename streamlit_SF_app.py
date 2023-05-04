@@ -19,25 +19,25 @@ config.read('config.ini')
 
 #Set up Snowflake login credential variables
 
-sfAccount = config['SnowflakePOC']['sfAccount']
-sfUser = config['SnowflakePOC']['sfUser']
-sfPass = config['SnowflakePOC']['sfPass']
-sfDB = config['SnowflakePOC']['sfDB']
-sfSchema = config['SnowflakePOC']['sfSchema']
-sfWarehouse = config['SnowflakePOC']['sfWarehouse']
+# sfAccount = config['SnowflakePOC']['sfAccount']
+# sfUser = config['SnowflakePOC']['sfUser']
+# sfPass = config['SnowflakePOC']['sfPass']
+# sfDB = config['SnowflakePOC']['sfDB']
+# sfSchema = config['SnowflakePOC']['sfSchema']
+# sfWarehouse = config['SnowflakePOC']['sfWarehouse']
 
 #Print SF user name to test login credential variables are setup properly
 print(sfUser)
 print(sfAccount)
-
+conn = snowflake.connector.connect(**streamlit.secrets["snowflake"])
 #Set up connection with Snowflake
-conn = snowflake.connector.connect(user = sfUser,
-                                    password = sfPass,
-                                    account = sfAccount,
-                                    warehouse = sfWarehouse,
-                                    database = sfDB,
-                                    schema = sfSchema
-                                    )
+# conn = snowflake.connector.connect(user = sfUser,
+#                                     password = sfPass,
+#                                     account = sfAccount,
+#                                     warehouse = sfWarehouse,
+#                                     database = sfDB,
+#                                     schema = sfSchema
+#                                     )
 
 cs = conn.cursor()
 
