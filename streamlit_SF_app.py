@@ -29,7 +29,7 @@ config.read('config.ini')
 #Print SF user name to test login credential variables are setup properly
 # print(sfUser)
 # print(sfAccount)
-conn = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+conn = snowflake.connector.connect(**st.secrets["snowflake"])
 #Set up connection with Snowflake
 # conn = snowflake.connector.connect(user = sfUser,
 #                                     password = sfPass,
